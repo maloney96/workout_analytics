@@ -3,8 +3,17 @@
 A local, self-hosted data pipeline over my [Hevy](https://hevy.com) training log.
 
 Pulls workout history from the Hevy public API, lands it as raw JSON, and models it into a
-medallion (bronze/silver/gold) warehouse for analysis — weekly volume by muscle group,
-strength progression, and program adherence.
+medallion (bronze/silver/gold) warehouse.
+
+Three questions it's built to answer:
+
+1. **Progression** — how are my lifts trending over time?
+2. **Recovery** — do I perform better after more or fewer rest days?
+3. **Timing** — is workout time of day correlated with performance?
+
+Training style is HIT (roughly one working set per exercise, taken to failure), which shapes the
+model: the analysis grain is one working set per exercise per session, and effort is effectively
+constant across observations. Body composition tracking is out of scope.
 
 ## Stack
 
@@ -21,7 +30,8 @@ Design phase. The data model is specified but not yet built.
 
 **Start here: [docs/data-model-options.md](docs/data-model-options.md)** — the source schema,
 three candidate modeling approaches with a recommendation, the decisions that have to be made
-before writing gold models, and the proposed DAG.
+before writing gold models, the proposed DAG, and the confounders to watch when interpreting
+results.
 
 ## Setup
 
