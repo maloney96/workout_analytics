@@ -81,6 +81,19 @@ python scripts/query.py "select 1" --csv            # pipe elsewhere
 In VS Code, the [DBCode](https://marketplace.visualstudio.com/items?itemName=dbcode.dbcode)
 extension is preconfigured in `.vscode/settings.json` with two connections.
 
+**Where the data is.** The catalog is `warehouse`. Raw API payloads live in the `bronze` schema
+as one JSON document per row — accurate, but unreadable in a table view. The `main` schema holds
+three flattened views built for browsing:
+
+| View | Grain |
+|---|---|
+| `main.workouts` | one row per session, with duration and exercise count |
+| `main.exercises` | one row per exercise within a session |
+| `main.sets` | one row per set, with `weight_lb`, `reps`, `rpe`, `is_working_set` |
+
+They are rebuilt on every ingest and are a convenience only — the real staging models will be
+dbt's. Start with `select * from main.sets`.
+
 **DuckDB allows only one process to hold the database file — and a read-only connection still
 blocks the writer.** So an editor connected to `warehouse.duckdb` will make `make ingest` and
 `dbt build` fail with `Could not set lock on file`. Two ways around it:
