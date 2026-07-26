@@ -39,3 +39,7 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+# Byte-compiled from compileall
+ingest/__pycache__/
+scripts/__pycache__/

@@ -1,0 +1,112 @@
+name: pipeline
+
+# Runs the same pipeline a local Docker run does. The only difference is where
+# HEVY_API_KEY comes from: `.env` locally, GitHub Secrets here. `ingest/config.py`
+# resolves both, so nothing downstream cares.
+
+on:
+  workflow_dispatch:
+    inputs:
+      full_refresh:
+        description: "Rebuild from scratch, ignoring cached warehouse state"
+        type: boolean
+        default: false
+  schedule:
+    # 07:00 UTC daily. Adjust once you know when you actually train.
+    - cron: "0 7 * * *"
+
+permissions:
+  contents: read
+
+# Never let two runs write the DuckDB file at once.
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+env:
+  HEVY_API_KEY: ${{ secrets.HEVY_API_KEY }}
+  LOCAL_TZ: ${{ secrets.LOCAL_TZ || 'UTC' }}
+  ASSUMED_BODYWEIGHT_KG: ${{ secrets.ASSUMED_BODYWEIGHT_KG || '80' }}
+  DUCKDB_PATH: ${{ github.workspace }}/data/warehouse.duckdb
+  BRONZE_PATH: ${{ github.workspace }}/data/bronze
+  DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Fail early if the secret is missing
+        run: |
+          if [ -z "$HEVY_API_KEY" ]; then
+            echo "::error::HEVY_API_KEY secret is not set. Run ./scripts/sync_secrets.sh locally, or: gh secret set HEVY_API_KEY"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Runners are ephemeral, so the warehouse and the raw landing zone have to be
+      # carried between runs. restore-keys makes this "most recent run wins".
+      - name: Restore warehouse
+        if: ${{ !inputs.full_refresh }}
+        uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: warehouse-${{ github.run_id }}
+          restore-keys: warehouse-
+
+      - name: Verify API connectivity
+        run: python scripts/check_connection.py
+
+      - name: Ingest
+        run: |
+          if [ -f ingest/run_ingest.py ]; then
+            python ingest/run_ingest.py ${{ inputs.full_refresh && '--full-refresh' || '' }}
+          else
+            echo "::notice::ingest/run_ingest.py not built yet — skipping."
+          fi
+
+      - name: Transform
+        run: |
+          if [ -f dbt/dbt_project.yml ]; then
+            dbt deps --project-dir dbt
+            dbt build --project-dir dbt ${{ inputs.full_refresh && '--full-refresh' || '' }}
+          else
+            echo "::notice::dbt project not built yet — skipping."
+          fi
+
+      - name: Save warehouse
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data
+          key: warehouse-${{ github.run_id }}
+
+      - name: Upload warehouse artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: warehouse-${{ github.run_number }}
+          path: data/warehouse.duckdb
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Upload dbt run results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-target-${{ github.run_number }}
+          path: dbt/target
+          retention-days: 7
+          if-no-files-found: ignore

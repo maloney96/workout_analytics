@@ -1,0 +1,51 @@
+name: ci
+
+# Runs on every push. Deliberately needs no secrets, so it works on forks and
+# never risks leaking the API key into a PR context.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile Python
+        run: python -m compileall -q ingest scripts
+
+      - name: Shell syntax
+        run: bash -n scripts/sync_secrets.sh
+
+      - name: Config resolves without a key present
+        env:
+          HEVY_API_KEY: ""
+        run: |
+          python -c "
+          from ingest import config
+          assert config.local_tz()
+          assert config.duckdb_path()
+          print('config OK')
+          "
+
+      - name: .env.example covers every synced secret
+        run: |
+          keys=$(sed -n 's/^SYNCED_KEYS=(\(.*\))/\1/p' scripts/sync_secrets.sh)
+          status=0
+          for key in $keys; do
+            if ! grep -qE "^${key}=" .env.example; then
+              echo "::error::$key is synced to GitHub Secrets but missing from .env.example"
+              status=1
+            fi
+          done
+          exit $status

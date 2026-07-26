@@ -1,0 +1,9 @@
+# Pipeline dependencies — installed in CI and inside the Airflow image.
+# Airflow itself is deliberately NOT here: it comes from the Docker image locally,
+# and GitHub Actions acts as the orchestrator remotely. Both call the same scripts.
+
+duckdb>=1.1
+dbt-core>=1.8
+dbt-duckdb>=1.8
+requests>=2.32
+tenacity>=9.0
