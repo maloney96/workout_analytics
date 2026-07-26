@@ -20,15 +20,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.lock.txt
+
+      # Install the full lockfile rather than an ad-hoc subset: the tests import
+      # ingest modules, so anything they import has to be present, and guessing
+      # that list breaks the build every time a new import is added.
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.lock.txt
 
       - name: Compile Python
-        run: python -m compileall -q ingest scripts
+        run: python -m compileall -q ingest scripts tests
 
       # Hevy is the system of record; the warehouse is derived. Nothing here may write to it.
       - name: Hevy API is read-only
-        run: |
-          pip install "requests>=2.32"
-          python -m unittest discover -s tests -v
+        run: python -m unittest discover -s tests -v
 
       - name: Shell syntax
         run: bash -n scripts/sync_secrets.sh
