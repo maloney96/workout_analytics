@@ -40,6 +40,3 @@ venv/
 .vscode/
 .idea/
 
-# Byte-compiled from compileall
-ingest/__pycache__/
-scripts/__pycache__/

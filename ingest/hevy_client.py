@@ -1,4 +1,12 @@
-"""Hevy API v1 client.
+"""Hevy API v1 client. Read-only by construction.
+
+The Hevy key cannot be scoped — the same credential that reads workouts can also
+create and overwrite them via 8 write endpoints, including PUT /v1/workouts/{id}.
+Hevy is the system of record for this data and the warehouse is derived, so this
+client must never issue anything but GET.
+
+That is enforced in `ReadOnlySession` rather than left to convention: any non-GET
+raises before a request is built, no matter which code path attempts it.
 
 Page-size ceilings are per-endpoint and undocumented — these values were found by
 probing the live API, which rejects anything larger with a 400. The API sends no
@@ -37,6 +45,29 @@ class RetryableError(Exception):
     """A transient failure worth retrying."""
 
 
+class ReadOnlyViolation(RuntimeError):
+    """Raised when anything attempts a write against the Hevy API."""
+
+
+class ReadOnlySession(requests.Session):
+    """A requests Session that refuses every HTTP method except GET.
+
+    Overriding `request` covers `.post()`, `.put()`, `.patch()`, `.delete()` and
+    any direct `.request(...)` call, since they all funnel through here.
+    """
+
+    ALLOWED = frozenset({"GET", "HEAD", "OPTIONS"})
+
+    def request(self, method, url, *args, **kwargs):  # type: ignore[override]
+        if str(method).upper() not in self.ALLOWED:
+            raise ReadOnlyViolation(
+                f"Blocked {str(method).upper()} {url}. This project is read-only against "
+                "the Hevy API: Hevy is the system of record and the warehouse is derived. "
+                "Writes would modify the original training log."
+            )
+        return super().request(method, url, *args, **kwargs)
+
+
 @dataclass
 class Page:
     endpoint: str
@@ -48,7 +79,7 @@ class Page:
 class HevyClient:
     def __init__(self, api_key: str | None = None, *, timeout: int = 30) -> None:
         self.timeout = timeout
-        self.session = requests.Session()
+        self.session = ReadOnlySession()
         self.session.headers.update(
             {"api-key": api_key or config.api_key(), "accept": "application/json"}
         )

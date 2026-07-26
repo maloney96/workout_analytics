@@ -48,6 +48,32 @@ so local and CI resolve identical versions. Airflow is deliberately excluded —
 Docker image. To add or bump a package, edit `requirements.txt`, run `make lock`, and commit the
 refreshed lockfile.
 
+## The Hevy API is read-only, and that is enforced
+
+Hevy is the system of record for this training log; the warehouse is derived and disposable. The
+pipeline must never write back.
+
+The API key cannot be scoped — the same credential that reads workouts can also create and
+overwrite them through 8 write endpoints, including `POST /v1/workouts` and
+`PUT /v1/workouts/{id}`. So the guarantee is enforced in code rather than left to convention:
+
+- [`ReadOnlySession`](ingest/hevy_client.py) subclasses `requests.Session` and raises
+  `ReadOnlyViolation` on any method other than GET/HEAD/OPTIONS. Because `.post()`, `.put()`,
+  `.patch()` and `.delete()` all funnel through `request()`, every write path is blocked — before
+  a request is built, so nothing reaches the network.
+- [`tests/test_read_only.py`](tests/test_read_only.py) proves it, and additionally walks the AST
+  of every module in `ingest/` and `scripts/` to fail the build on a bare `requests.post(...)`
+  that would bypass the guarded session entirely.
+- CI runs those tests on every push.
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+What this does *not* cover: anything run outside this codebase with the same key — `curl`, the
+Hevy app itself, or a future script that builds its own HTTP client. The AST check catches the
+last case only for files under `ingest/` and `scripts/`.
+
 ## Configuration and secrets
 
 One key, two places it can live, no code that knows the difference.
