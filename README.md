@@ -38,10 +38,15 @@ results.
 Requires a Hevy Pro account. Generate an API key at <https://hevy.com/settings?developer>.
 
 ```bash
-make setup       # copies .env.example to .env
+make setup       # builds .venv (Python 3.12) and copies .env.example to .env
 # fill in HEVY_API_KEY
 make check       # verifies the key resolves and the API answers
 ```
+
+The venv is built from `requirements.lock.txt` on Python 3.12, matching what the workflow pins,
+so local and CI resolve identical versions. Airflow is deliberately excluded — it comes from the
+Docker image. To add or bump a package, edit `requirements.txt`, run `make lock`, and commit the
+refreshed lockfile.
 
 ## Configuration and secrets
 
