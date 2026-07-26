@@ -47,7 +47,8 @@ Workout (id, title, routine_id, start_time, end_time, created_at, updated_at)
 Facts that drive decisions later:
 
 - **All units are SI** — kilograms, meters, seconds — regardless of app display. Store SI,
-  convert at the presentation layer only.
+  convert at the presentation layer only. But see [§1.1](#11-corrections-from-the-live-api) —
+  the kg values are not clean.
 - **All timestamps are UTC** (`2021-09-14T12:00:00Z`). `start_time` and `end_time` are the only
   temporal signals; sets carry no timestamps.
 - **`set.type`** is one of `normal`, `warmup`, `dropset`, `failure` — a free, reliable working-set
@@ -55,9 +56,34 @@ Facts that drive decisions later:
 - **`exercise_template.type`** is one of eight values: `weight_reps`, `reps_only`,
   `bodyweight_reps`, `bodyweight_assisted_reps`, `duration`, `weight_duration`,
   `distance_duration`, `short_distance_weight`.
-- **Default `pageSize` is 5** on every list endpoint, and the spec publishes **no maximum and no
-  rate limit**. A full backfill is likely hundreds of sequential calls; it needs throttling and
-  resumability. Probe the real ceiling before designing the backfill.
+
+### 1.1 Corrections from the live API
+
+The published OpenAPI spec is wrong or silent in several places. These were all found by probing
+the real account, and each one would have caused a silent failure.
+
+- **The field is `superset_id`, not `supersets_id`.** The spec says the latter; the API returns
+  the former. Staging models must use the real name or supersets vanish.
+- **`pageSize` ceilings are per-endpoint and enforced with a 400**, not documented anywhere:
+  `/v1/workouts`, `/v1/workouts/events`, `/v1/routines`, and `/v1/routine_folders` cap at **10**;
+  `/v1/exercise_templates` caps at **100**. The spec's default of 5 is just a default.
+- **No rate-limit headers exist** — not `X-RateLimit-*`, not `Retry-After`. 15 rapid calls in
+  1.3s all returned 200, so the practical limit is generous, but backoff has to be defensive
+  rather than informed since the server gives no signal.
+- **`/v1/workouts/events?since=` is inclusive.** Passing back the newest event's timestamp
+  returns that same event forever. The high-water mark has to be advanced by ~1ms.
+- **`/v1/routines` returns duplicates within a single pass** — two routines came back on two
+  different pages of the same walk. Offset pagination over a non-uniquely-ordered list. Dedupe
+  by id within each fetch, not just across runs.
+- **Weights are logged in pounds and converted lossily.** A 90 lb set is stored as
+  `40.82336184920758` kg. Hevy divides by **2.20462** (not the exact 2.20462262), so
+  `weight_kg * 2.20462` recovers the entered value exactly. Roughly 6% of sets are entered in kg
+  directly (clean values like 15 or 20).
+
+  This matters more than it looks: `weight_kg` will **not group or join cleanly**. "Same weight
+  across sessions" comparisons and any `reps_at_load` grouping need a canonical weight. Round to
+  3 decimal places in kg for grouping, and derive `weight_lb = round(weight_kg * 2.20462, 2)`
+  for anything you actually read.
 
 ### The one thing the API does not give you
 
@@ -113,6 +139,41 @@ own tested model rather than being re-derived in every query.
 
 ## 3. Decisions to make before writing gold models
 
+### 3.0a The training regime changed — this is the biggest constraint on the analysis
+
+Bronze now holds the full history: **381 workouts, 9,510 sets, 171 distinct exercises, spanning
+2024-07-26 to 2026-07-24.** Two years of data, which sounds like plenty. It isn't, because the
+training style changed partway through.
+
+Working sets per exercise, by month:
+
+| Period | Workouts | Avg working sets/exercise | % single-set | Failure sets |
+|---|---|---|---|---|
+| 2024 Q3 – 2025 Q4 | 286 | 2.7 – 3.4 | 0–7% | 1 |
+| 2026-01 → 2026-03 | 48 | 2.35 → 1.92 | 11% → 16% | 8 |
+| 2026-04 | 11 | 1.44 | 59% | — |
+| 2026-05 → 2026-07 | 36 | ~1.19 | 81–83% | 142 |
+
+For the first 18 months this was a **volume program** — three sets per exercise, essentially no
+sets logged to failure. The switch to HIT begins in January 2026, tips over in **April 2026**,
+and is fully established by **May 2026**.
+
+Consequences you have to design around:
+
+- **Only ~36–47 workouts are HIT-era**, not 381. Every sample-size expectation set earlier in
+  this document applies to that smaller number.
+- **Pooling the two eras is invalid** for the rest and time-of-day questions. Performance under
+  3-sets-not-to-failure and 1-set-to-failure aren't the same measurement, and the "effort is
+  held constant" advantage below holds *only within the HIT era*.
+- **Progression across the boundary is real but not comparable.** An e1RM trend line through
+  April 2026 is measuring a methodology change as much as a strength change.
+
+**Recommend** a `training_era` attribute on `dim_date` (or a `fct_workout` column) derived from a
+dated seed rather than inferred, with the boundary at **2026-05-01** for a clean HIT cohort and
+2026-01-01 through 2026-04-30 flagged as a transition to exclude. Every analysis in §6 should
+either filter to one era or carry era as a control. The volume era is still useful for goal 1
+(long-run progression per exercise) as long as the break is drawn on the chart.
+
 ### 3.0 What HIT changes
 
 Training one working set per exercise to failure has three consequences worth designing around,
@@ -125,8 +186,9 @@ aggregation to argue about — `fct_exercise_session` is close to a filtered pro
 occasional second set still live in `fct_set`), but the intermediate logic gets much simpler.
 
 **Effort is held constant, which is a real gift.** The single biggest confounder in this kind of
-analysis is variable effort — a set at RPE 7 and a set at RPE 10 aren't comparable, and self-
-reported RPE is sparse and unreliable. Taking every working set to failure removes that variable
+analysis is variable effort — a set at RPE 7 and a set at RPE 10 aren't comparable, and in most
+training logs self-reported RPE is too sparse to control for. Taking every working set to failure
+removes that variable
 by construction. When you see performance vary by rest interval or time of day, it's much more
 plausibly the thing you're measuring, because intent didn't vary. Most people asking these
 questions can't say that.
@@ -140,6 +202,15 @@ One modeling detail: HIT intensity techniques (drop sets, rest-pause) show up as
 `set.type = 'dropset'` attached to the same exercise. Treat those as **part of the same working
 effort**, not as separate exposures — otherwise your set counts and any "sets per session" metric
 will misrepresent what you did. Flag them (`has_intensity_technique`) rather than counting them.
+Measured on the recent HIT-era data: 46% of all logged sets are warmups, 32% normal, 17% failure,
+5% dropset — so the warmup filter is doing a lot of work, and intensity techniques are common
+enough to matter.
+
+**RPE is unusually well populated here — 91% of working sets carry one.** That's far better than
+the typical training log, and it upgrades RPE from "nice if present" to a usable covariate. Use
+it as a proximity-to-failure check: in a program where every working set is meant to reach
+failure, sets logged below RPE 9 are a signal that the intent wasn't met, and are worth flagging
+or excluding rather than averaging in.
 
 ### 3.1 The performance metric — the crux of both questions
 
@@ -327,8 +398,12 @@ Seeds: `exercise_crosswalk.csv`.
 
 ## 5. Suggested build order
 
-1. Bronze ingest + full backfill, with resumable pagination and rate-limit backoff.
+1. ~~Bronze ingest + full backfill, with resumable pagination and rate-limit backoff.~~
+   **Done** — see `ingest/`. Full backfill runs in ~3s; incremental runs are a single call and
+   land nothing when nothing changed.
 2. `stg_*` unnesting down to `stg_hevy__workout_sets`. Reconcile set counts against the app.
+   Bronze rows carry `record_id` and `record_hash`, so silver dedupes by taking the latest
+   `ingested_at` per `record_id`.
 3. `dim_exercise` + `exercise_crosswalk` seed. Do this early — everything downstream keys off it.
 4. `fct_set` with `delete+insert` on `workout_id`, then `fct_workout` rolled up from it, tested
    so session totals equal the sum of their sets.
@@ -358,6 +433,13 @@ the analysis knowing this, rather than discovering it after the fact:
   may be the illness, not the layoff. Consider flagging known-disrupted periods manually.
 - **Rest is also confounded with program phase.** If your split changed, exposure frequency
   changed with it, and the comparison spans two different programs.
+- **The volume-to-HIT switch in early 2026 dominates all of the above** (§3.0a). Any analysis
+  spanning it is comparing two methodologies. Filter to one era or carry era as a control.
+- **Session gaps have little variance.** In the recent sample, 74% of gaps between workouts are
+  1–2 days and the longest is 8. `days_since_last_workout` is therefore nearly constant and
+  probably can't answer anything. `days_since_last_exposure` per exercise is where the variance
+  actually lives, because you rotate across 171 distinct exercises — which is exactly why the
+  model keys rest off the exercise rather than the session.
 - **Sample size is your binding constraint.** HIT gives you roughly one observation per exercise
   per session, so a year of training might be 40–50 data points for your best-covered lift and
   far fewer for the rest. Require a minimum (say 10 sessions) before reporting anything
@@ -381,11 +463,18 @@ rest or training time for one lift rather than waiting for your log to happen to
 
 ## 7. Open questions
 
-- What is the real `pageSize` ceiling and rate limit? The spec documents neither.
+- **Where exactly to draw the HIT-era boundary** (§3.0a). 2026-05-01 gives a clean cohort of 36
+  workouts; 2026-04-01 gives 47 but includes a month that was only 59% single-set. You know what
+  actually changed and when — this should be a seed, not an inference.
 - e1RM formula and the rep-range cap above which you refuse to estimate. Matters more than usual
   if HIT sets regularly run past 12 reps.
-- Rolling baseline window and statistic (90-day trailing max, or something more robust).
+- Rolling baseline window and statistic (90-day trailing max, or something more robust). With
+  only ~36 HIT-era workouts, a 90-day trailing window may cover most of the cohort.
 - Unilateral convention: double the reps, or halve the volume?
 - Nominal value for `assumed_bodyweight_kg`.
-- Do you log intensity techniques as `dropset` rows consistently? If the logging is inconsistent,
-  §3.0's dropset folding needs to be lenient rather than exact.
+- 171 distinct exercises across 381 workouts is a lot of variety. How aggressively should the
+  crosswalk collapse them into canonical movements? This directly sets your per-exercise sample
+  sizes.
+
+Answered by probing the live API — see [§1.1](#11-corrections-from-the-live-api): page-size
+ceilings, rate limits, and the lbs conversion.
