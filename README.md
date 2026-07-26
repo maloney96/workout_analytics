@@ -68,6 +68,28 @@ Only `HEVY_API_KEY`, `LOCAL_TZ`, and `ASSUMED_BODYWEIGHT_KG` are synced — path
 a runner's filesystem isn't yours. CI enforces that anything in that sync list also appears in
 `.env.example`, so the two can't drift apart silently.
 
+## Browsing the warehouse
+
+From the terminal, no extra tooling needed:
+
+```bash
+make query                                          # list bronze tables
+make query Q="select * from bronze.workouts"
+python scripts/query.py "select 1" --csv            # pipe elsewhere
+```
+
+In VS Code, the [DBCode](https://marketplace.visualstudio.com/items?itemName=dbcode.dbcode)
+extension is preconfigured in `.vscode/settings.json` with two connections.
+
+**DuckDB allows only one process to hold the database file — and a read-only connection still
+blocks the writer.** So an editor connected to `warehouse.duckdb` will make `make ingest` and
+`dbt build` fail with `Could not set lock on file`. Two ways around it:
+
+- Use the **live** connection and disconnect (DBCode: right-click → Disconnect) before running
+  the pipeline. Always current, but you have to remember.
+- Use the **snapshot** connection and run `make snapshot` to refresh it. Never blocks anything;
+  shows data as of the last snapshot.
+
 ## Running
 
 | Where | Orchestrator | Entry point |

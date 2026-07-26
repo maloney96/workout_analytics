@@ -1,4 +1,4 @@
-.PHONY: help setup venv lock check sync-secrets secrets-status clean-venv
+.PHONY: help setup venv lock check ingest backfill query snapshot sync-secrets secrets-status clean-venv
 
 PYTHON := python3.12
 VENV   := .venv
@@ -26,6 +26,19 @@ lock: ## Re-resolve requirements.txt and refresh the lockfile
 
 check: venv ## Verify the Hevy API key resolves and works
 	$(BIN)/python scripts/check_connection.py
+
+ingest: venv ## Run the bronze ingest (incremental)
+	$(BIN)/python ingest/run_ingest.py
+
+backfill: venv ## Re-pull every workout from scratch
+	$(BIN)/python ingest/run_ingest.py --full-refresh
+
+query: venv ## Run SQL against the warehouse: make query Q="select ..."
+	@$(BIN)/python scripts/query.py $(if $(Q),"$(Q)")
+
+snapshot: ## Copy the warehouse so a DB tool can browse it without locking the pipeline
+	@cp data/warehouse.duckdb data/warehouse_snapshot.duckdb
+	@echo "Snapshot refreshed: data/warehouse_snapshot.duckdb"
 
 clean-venv: ## Delete the virtualenv
 	rm -rf $(VENV)
