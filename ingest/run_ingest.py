@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from ingest import bronze, browse_views, config  # noqa: E402
+from ingest import bronze, config  # noqa: E402
 from ingest.hevy_client import HevyClient  # noqa: E402
 
 log = logging.getLogger("ingest")
@@ -138,7 +138,6 @@ def main() -> int:
             else:
                 counts["workout_events"] = ingest_workout_events(client, con, run, high_water)
 
-        browse_views.create(con)
     finally:
         con.close()
 

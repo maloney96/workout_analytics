@@ -76,20 +76,12 @@ jobs:
 
       - name: Ingest
         run: |
-          if [ -f ingest/run_ingest.py ]; then
-            python ingest/run_ingest.py ${{ inputs.full_refresh && '--full-refresh' || '' }}
-          else
-            echo "::notice::ingest/run_ingest.py not built yet — skipping."
-          fi
+          python ingest/run_ingest.py ${{ inputs.full_refresh && '--full-refresh' || '' }}
 
       - name: Transform
         run: |
-          if [ -f dbt/dbt_project.yml ]; then
-            dbt deps --project-dir dbt
-            dbt build --project-dir dbt ${{ inputs.full_refresh && '--full-refresh' || '' }}
-          else
-            echo "::notice::dbt project not built yet — skipping."
-          fi
+          if [ -f dbt/packages.yml ]; then dbt deps --project-dir dbt; fi
+          dbt build --project-dir dbt ${{ inputs.full_refresh && '--full-refresh' || '' }}
 
       - name: Save warehouse
         if: always()

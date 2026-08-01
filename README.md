@@ -26,7 +26,9 @@ constant across observations. Body composition tracking is out of scope.
 
 ## Status
 
-Design phase. The data model is specified but not yet built.
+Bronze and staging are built and tested. 384 workouts / 9,570 sets spanning 2024-07 to 2026-07,
+refreshed incrementally off the API change feed. Next: the exercise crosswalk seed, then
+`fct_set` / `fct_workout`, then per-exercise progression.
 
 **Start here: [docs/data-model-options.md](docs/data-model-options.md)** — the source schema,
 three candidate modeling approaches with a recommendation, the decisions that have to be made
@@ -108,17 +110,17 @@ In VS Code, the [DBCode](https://marketplace.visualstudio.com/items?itemName=dbc
 extension is preconfigured in `.vscode/settings.json` with two connections.
 
 **Where the data is.** The catalog is `warehouse`. Raw API payloads live in the `bronze` schema
-as one JSON document per row — accurate, but unreadable in a table view. The `main` schema holds
-three flattened views built for browsing:
+as one JSON document per row — accurate, but unreadable in a table view. Read from `staging`:
 
-| View | Grain |
+| Model | Grain |
 |---|---|
-| `main.workouts` | one row per session, with duration and exercise count |
-| `main.exercises` | one row per exercise within a session |
-| `main.sets` | one row per set, with `weight_lb`, `reps`, `rpe`, `is_working_set` |
+| `staging.stg_hevy__workouts` | one row per session, with local time, part of day, and training era |
+| `staging.stg_hevy__workout_exercises` | one row per exercise within a session |
+| `staging.stg_hevy__workout_sets` | atomic — one row per set, with `weight_lb`, `reps`, `rpe`, `is_working_set` |
+| `staging.stg_hevy__exercise_templates` | exercise definitions, muscle group, `weight_semantics` |
+| `staging.training_era` | seeded methodology date ranges |
 
-They are rebuilt on every ingest and are a convenience only — the real staging models will be
-dbt's. Start with `select * from main.sets`.
+Start with `select * from staging.stg_hevy__workout_sets`.
 
 **DuckDB allows only one process to hold the database file — and a read-only connection still
 blocks the writer.** So an editor connected to `warehouse.duckdb` will make `make ingest` and
@@ -131,9 +133,16 @@ blocks the writer.** So an editor connected to `warehouse.duckdb` will make `mak
 
 ## Running
 
+```bash
+make pipeline    # ingest, then dbt build + tests
+make ingest      # bronze only
+make dbt         # transform only
+make dbt-docs    # browse the model graph
+```
+
 | Where | Orchestrator | Entry point |
 |---|---|---|
-| Local | Airflow (Docker) | `dags/` |
+| Local | `make`, Airflow later | [Makefile](Makefile), `dags/` |
 | Remote | GitHub Actions | [.github/workflows/pipeline.yml](.github/workflows/pipeline.yml) |
 
 Both call the same `ingest/` scripts and the same dbt project — Airflow is not a dependency of the
@@ -152,7 +161,10 @@ dags/               Airflow DAGs — ingest and dbt orchestration
 ingest/             Hevy API client, pagination, CDC via /workouts/events
   config.py         single config resolution for local and CI
 dbt/                dbt project: staging → intermediate → marts
-  seeds/            exercise crosswalk — hand-maintained
+  models/staging/   unnests bronze JSON to workout / exercise / set grain
+  macros/hevy.sql   local time, pounds canonicalisation, bronze dedupe
+  seeds/            training_era; exercise crosswalk to come
+  tests/            singular tests, incl. set-count parity against bronze
 scripts/            check_connection.py, sync_secrets.sh
 docs/               design notes
 data/               DuckDB file and raw landing zone (gitignored)

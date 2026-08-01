@@ -166,8 +166,19 @@ def materialize(con: duckdb.DuckDBPyConnection, dataset: str) -> int:
             record
         from read_json(
             ?,
-            format          = 'newline_delimited',
-            union_by_name   = true,
+            format  = 'newline_delimited',
+            -- Declare every column. Left to infer, read_json parses `record` into a
+            -- STRUCT and coerces its fields — which silently drops the UTC offset from
+            -- timestamps, so 23:04:57+00:00 becomes a naive 23:04:57 and is later read
+            -- as local time. Bronze must hand back exactly what the API sent.
+            columns = {{
+                _ingested_at: 'VARCHAR',
+                _run_id:      'VARCHAR',
+                _endpoint:    'VARCHAR',
+                _record_id:   'VARCHAR',
+                _record_hash: 'VARCHAR',
+                record:       'JSON'
+            }},
             maximum_object_size = 33554432
         )
         """,

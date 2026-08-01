@@ -1,0 +1,30 @@
+name: workout_analytics
+version: 1.0.0
+config-version: 2
+profile: workout_analytics
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Local timezone for every derived date/hour. The time-of-day analysis is
+  # meaningless if this is wrong; UTC dates also straddle the wrong day boundary.
+  local_tz: "America/New_York"
+  # Nominal, held constant on purpose so progression is not confounded by weight change.
+  assumed_bodyweight_kg: 80
+  # Start of the single-set-to-failure era. See seeds/training_era.csv.
+  hit_era_start: "2026-05-01"
+
+models:
+  workout_analytics:
+    staging:
+      +materialized: view
+      +schema: staging
+
+seeds:
+  workout_analytics:
+    +schema: staging

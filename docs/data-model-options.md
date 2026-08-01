@@ -53,9 +53,8 @@ Facts that drive decisions later:
   temporal signals; sets carry no timestamps.
 - **`set.type`** is one of `normal`, `warmup`, `dropset`, `failure` — a free, reliable working-set
   filter. You don't have to infer it.
-- **`exercise_template.type`** is one of eight values: `weight_reps`, `reps_only`,
-  `bodyweight_reps`, `bodyweight_assisted_reps`, `duration`, `weight_duration`,
-  `distance_duration`, `short_distance_weight`.
+- **`exercise_template.type`** partitions exercises by how load is recorded — but the spec's
+  enum is wrong, see [§1.1](#11-corrections-from-the-live-api).
 
 ### 1.1 Corrections from the live API
 
@@ -75,6 +74,21 @@ the real account, and each one would have caused a silent failure.
 - **`/v1/routines` returns duplicates within a single pass** — two routines came back on two
   different pages of the same walk. Offset pagination over a non-uniquely-ordered list. Dedupe
   by id within each fetch, not just across runs.
+- **`exercise_template.type` values are wrong in the spec.** The published enum lists
+  `bodyweight_reps` and `bodyweight_assisted_reps`, which the API never returns. The real values
+  include `bodyweight_weighted` and `bodyweight_assisted`, plus `floors_duration` and
+  `steps_duration`, which the spec omits entirely. A flag written against the spec's names was
+  silently false for every row; a dbt `accepted_values` test caught it.
+
+  This matters for load: `reps_only` carries no weight at all (pull-ups, push-ups),
+  `bodyweight_weighted` carries weight *added* to bodyweight, and `bodyweight_assisted` carries
+  *assistance* that subtracts — and on a machine whose counterweight is not a 1:1 offset, so it
+  should be labelled rather than converted. `stg_hevy__exercise_templates.weight_semantics`
+  records which of these applies.
+- **Bronze must pin its JSON column type.** DuckDB's `read_json` inference parses `record` into a
+  STRUCT and coerces the fields, which drops the UTC offset from timestamps: `23:04:57+00:00`
+  becomes a naive `23:04:57` and is then read as local time. That is a silent four-hour error in
+  exactly the dimension question 3 measures. Declare `record: 'JSON'` explicitly.
 - **Weights are logged in pounds and converted lossily.** A 90 lb set is stored as
   `40.82336184920758` kg. Hevy divides by **2.20462** (not the exact 2.20462262), so
   `weight_kg * 2.20462` recovers the entered value exactly. Roughly 6% of sets are entered in kg
@@ -401,9 +415,9 @@ Seeds: `exercise_crosswalk.csv`.
 1. ~~Bronze ingest + full backfill, with resumable pagination and rate-limit backoff.~~
    **Done** — see `ingest/`. Full backfill runs in ~3s; incremental runs are a single call and
    land nothing when nothing changed.
-2. `stg_*` unnesting down to `stg_hevy__workout_sets`. Reconcile set counts against the app.
-   Bronze rows carry `record_id` and `record_hash`, so silver dedupes by taking the latest
-   `ingested_at` per `record_id`.
+2. ~~`stg_*` unnesting down to `stg_hevy__workout_sets`.~~ **Done** — see `dbt/models/staging/`.
+   Six models, 46 passing tests including set-count parity against the raw payloads and a guard
+   that fails if the UTC-to-local conversion silently stops applying.
 3. `dim_exercise` + `exercise_crosswalk` seed. Do this early — everything downstream keys off it.
 4. `fct_set` with `delete+insert` on `workout_id`, then `fct_workout` rolled up from it, tested
    so session totals equal the sum of their sets.

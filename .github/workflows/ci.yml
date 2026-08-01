@@ -38,6 +38,13 @@ jobs:
       - name: Hevy API is read-only
         run: python -m unittest discover -s tests -v
 
+      # Validates model SQL, Jinja, refs and schema.yml without needing a warehouse.
+      - name: dbt project parses
+        env:
+          DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
+          DUCKDB_PATH: ${{ runner.temp }}/ci.duckdb
+        run: dbt parse --project-dir dbt
+
       - name: Shell syntax
         run: bash -n scripts/sync_secrets.sh
 

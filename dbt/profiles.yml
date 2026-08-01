@@ -1,0 +1,12 @@
+workout_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Overridden by the Makefile and by CI; the default suits a run from the repo root.
+      path: "{{ env_var('DUCKDB_PATH', 'data/warehouse.duckdb') }}"
+      threads: 4
+      settings:
+        # Pin the session timezone so timestamptz behaves identically on this laptop
+        # and on a CI runner. All local-time conversion is explicit, via to_local().
+        TimeZone: "UTC"

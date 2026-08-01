@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: hevy_bronze
+    schema: bronze
+    description: >
+      Raw Hevy API payloads landed by ingest/. Append-only: one row per landed version
+      of a record, so staging always takes the latest per record_id. The `record`
+      column is deliberately typed JSON rather than an inferred STRUCT — inference
+      drops the UTC offset from timestamps.
+    tables:
+      - name: workouts
+        description: One row per landed version of a workout, nested exercises and sets.
+        columns:
+          - name: record_id
+            tests: [not_null]
+          - name: record
+            tests: [not_null]
+      - name: workout_events
+        description: Change feed. `updated` events carry the full workout; `deleted` carry an id.
+      - name: exercise_templates
+        description: Stock and custom exercise definitions, with muscle groups and equipment.
+        columns:
+          - name: record_id
+            tests: [not_null]
+      - name: routines
+        description: Prescribed programs. Current state only — no history is retained.
+      - name: routine_folders
+        description: Groups routines into programs.

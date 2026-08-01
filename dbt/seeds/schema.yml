@@ -1,0 +1,23 @@
+version: 2
+
+seeds:
+  - name: training_era
+    description: >
+      Training methodology by date range. The switch from a volume program to HIT is
+      the single biggest confounder in this dataset: performance under three-sets-not-
+      to-failure is not the same measurement as one-set-to-failure, so any rest or
+      time-of-day analysis must filter to one era or carry era as a control.
+      Boundaries are a deliberate decision, not inferred from set counts.
+    columns:
+      - name: era
+        description: volume | transition | hit
+        tests: [unique, not_null]
+      - name: start_date
+        tests: [not_null]
+      - name: end_date
+        description: Open-ended eras use a far-future sentinel so joins stay simple.
+        tests: [not_null]
+    config:
+      column_types:
+        start_date: date
+        end_date: date

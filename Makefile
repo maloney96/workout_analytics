@@ -1,8 +1,11 @@
-.PHONY: help setup venv lock check ingest backfill query snapshot sync-secrets secrets-status clean-venv
+.PHONY: help setup venv lock check ingest backfill dbt dbt-test dbt-docs pipeline query snapshot sync-secrets secrets-status clean-venv
 
 PYTHON := python3.12
 VENV   := .venv
 BIN    := $(VENV)/bin
+
+export DBT_PROFILES_DIR := $(CURDIR)/dbt
+export DUCKDB_PATH      := $(CURDIR)/data/warehouse.duckdb
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -32,6 +35,17 @@ ingest: venv ## Run the bronze ingest (incremental)
 
 backfill: venv ## Re-pull every workout from scratch
 	$(BIN)/python ingest/run_ingest.py --full-refresh
+
+dbt: venv ## Build all dbt models and run their tests
+	$(BIN)/dbt build --project-dir dbt
+
+dbt-test: venv ## Run dbt tests only
+	$(BIN)/dbt test --project-dir dbt
+
+dbt-docs: venv ## Generate and serve the dbt docs site
+	$(BIN)/dbt docs generate --project-dir dbt && $(BIN)/dbt docs serve --project-dir dbt
+
+pipeline: ingest dbt ## Ingest then transform - the full local run
 
 query: venv ## Run SQL against the warehouse: make query Q="select ..."
 	@$(BIN)/python scripts/query.py $(if $(Q),"$(Q)")
