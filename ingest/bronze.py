@@ -207,7 +207,12 @@ def get_high_water(con: duckdb.DuckDBPyConnection, dataset: str) -> str | None:
     row = con.execute(
         "select high_water from bronze.ingest_state where dataset = ?", [dataset]
     ).fetchone()
-    return row[0].isoformat().replace("+00:00", "Z") if row and row[0] else None
+    if not row or not row[0]:
+        return None
+    # DuckDB renders timestamptz in the session timezone, so this would otherwise be
+    # sent as e.g. -04:00. The instant is correct either way, but the API's parsing of
+    # offsets is undocumented and there is no reason to rely on it.
+    return row[0].astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def set_high_water(
