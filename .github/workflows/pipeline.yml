@@ -83,6 +83,12 @@ jobs:
           if [ -f dbt/packages.yml ]; then dbt deps --project-dir dbt; fi
           dbt build --project-dir dbt ${{ inputs.full_refresh && '--full-refresh' || '' }}
 
+      # dbt proves the models are self-consistent. This recomputes the same figures
+      # from the API in Python, which is the only way to catch a conversion that is
+      # wrong everywhere at once.
+      - name: Cross-check against the API
+        run: python scripts/verify_pipeline.py
+
       - name: Save warehouse
         if: always()
         uses: actions/cache/save@v4

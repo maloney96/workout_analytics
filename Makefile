@@ -1,4 +1,4 @@
-.PHONY: help setup venv lock check ingest backfill dbt dbt-test dbt-docs pipeline query snapshot sync-secrets secrets-status clean-venv
+.PHONY: help setup venv lock check test verify ingest backfill dbt dbt-test dbt-docs pipeline query snapshot sync-secrets secrets-status clean-venv
 
 PYTHON := python3.12
 VENV   := .venv
@@ -29,6 +29,12 @@ lock: ## Re-resolve requirements.txt and refresh the lockfile
 
 check: venv ## Verify the Hevy API key resolves and works
 	$(BIN)/python scripts/check_connection.py
+
+test: venv ## Run the Python unit tests (no API key needed)
+	$(BIN)/python -m unittest discover -s tests -v
+
+verify: venv ## Cross-check the warehouse against the live API
+	$(BIN)/python scripts/verify_pipeline.py
 
 ingest: venv ## Run the bronze ingest (incremental)
 	$(BIN)/python ingest/run_ingest.py

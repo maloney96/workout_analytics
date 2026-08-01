@@ -69,7 +69,7 @@ overwrite them through 8 write endpoints, including `POST /v1/workouts` and
 - CI runs those tests on every push.
 
 ```bash
-python -m unittest discover -s tests -v
+make test      # unit tests, no API key needed
 ```
 
 What this does *not* cover: anything run outside this codebase with the same key — `curl`, the
@@ -137,8 +137,25 @@ blocks the writer.** So an editor connected to `warehouse.duckdb` will make `mak
 make pipeline    # ingest, then dbt build + tests
 make ingest      # bronze only
 make dbt         # transform only
+make verify      # cross-check the warehouse against the live API
 make dbt-docs    # browse the model graph
 ```
+
+## How it's verified
+
+Three layers, because they catch different failures:
+
+| Layer | Command | Catches |
+|---|---|---|
+| Unit tests (23) | `make test` | dedupe, change detection, read-only enforcement |
+| dbt tests (46) | `make dbt-test` | uniqueness, referential integrity, set-count parity with bronze |
+| API cross-check (12) | `make verify` | conversions that are wrong *consistently* |
+
+The third matters most. dbt can only prove staging agrees with bronze — if a timezone
+or unit conversion were wrong, it would be wrong everywhere and every test would still
+pass. So [scripts/verify_pipeline.py](scripts/verify_pipeline.py) recomputes counts,
+local times and weights a second time in Python, straight from the API, using
+`zoneinfo` and plain arithmetic rather than the SQL. Where the two disagree, one is wrong.
 
 | Where | Orchestrator | Entry point |
 |---|---|---|
