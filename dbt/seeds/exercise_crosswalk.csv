@@ -1,0 +1,173 @@
+exercise_template_id,source_title,canonical_exercise,movement_pattern,is_unilateral,is_compound
+3BC06AD3,21s Bicep Curl,bicep_curl_21s,elbow_flexion,false,false
+B4F2FF72,Ab Scissors,ab_scissors,core_hip_flexion,false,false
+99D5F10E,Ab Wheel,ab_wheel,core_antiextension,false,false
+43573BB8,Air Bike,air_bike,cardio,false,false
+A69FF221,Arnold Press (Dumbbell),arnold_press,vertical_push,false,true
+4F5866F8,Back Extension (Hyperextension),back_extension,hip_extension,false,false
+E8D86EE8,Band Pullaparts,band_pullapart,rear_delt,false,false
+e824eb91-d3e8-4e0c-b886-e4c46199e14e,Belt Squat,belt_squat,squat,false,true
+3D1CDC75,Belt Squat (Machine),belt_squat,squat,false,true
+79D0BB3A,Bench Press (Barbell),bench_press_barbell,horizontal_push,false,true
+3601968B,Bench Press (Dumbbell),bench_press_dumbbell,horizontal_push,false,true
+35B51B87,Bench Press - Close Grip (Barbell),close_grip_bench_press,horizontal_push,false,true
+55E6546F,Bent Over Row (Barbell),bent_over_row_barbell,horizontal_pull,false,true
+23E92538,Bent Over Row (Dumbbell),bent_over_row_dumbbell,horizontal_pull,false,true
+ADA8623C,Bicep Curl (Cable),bicep_curl_cable,elbow_flexion,false,false
+37FCC2BB,Bicep Curl (Dumbbell),bicep_curl_dumbbell,elbow_flexion,false,false
+0B4C1902,Bicep Curl (Suspension),bicep_curl_suspension,elbow_flexion,false,false
+A41C7261,Bicycle Crunch,bicycle_crunch,core_flexion,false,false
+38FC1AB9,Box Squat (Barbell),box_squat,squat,false,true
+B5D3A742,Bulgarian Split Squat (Dumbbell),bulgarian_split_squat,lunge,true,true
+9DCE2D64,Butterfly (Pec Deck),pec_deck,chest_isolation,false,false
+23A48484,Cable Crunch,cable_crunch,core_flexion,false,false
+651F844C,Cable Fly Crossovers,cable_fly,chest_isolation,false,false
+91237BDD,Calf Press (Machine),calf_press,calf_raise,false,false
+12017185,Chest Fly (Dumbbell),chest_fly_dumbbell,chest_isolation,false,false
+78683336,Chest Fly (Machine),chest_fly_machine,chest_isolation,false,false
+7EB3F7C3,Chest Press (Machine),chest_press_machine,horizontal_push,false,true
+914F3A96,Chest Supported Incline Row (Dumbbell),chest_supported_row_dumbbell,horizontal_pull,false,true
+29083183,Chin Up,chin_up,vertical_pull,false,true
+724CDE60,Concentration Curl,concentration_curl,elbow_flexion,true,false
+32C4D4A2,Cross Body Hammer Curl,cross_body_hammer_curl,elbow_flexion,false,false
+EB43ADD4,Crunch (Machine),crunch_machine,core_flexion,false,false
+D928C232,Crunch (Weighted),crunch_weighted,core_flexion,false,false
+B9380898,Dead Hang,dead_hang,grip_hang,false,false
+C6272009,Deadlift (Barbell),deadlift_barbell,hinge,false,true
+B923B230,Deadlift (Trap bar),deadlift_trap_bar,hinge,false,true
+18487FA7,Decline Bench Press (Dumbbell),decline_bench_press_dumbbell,horizontal_push,false,true
+FAF31231,Decline Bench Press (Machine),decline_chest_press_machine,horizontal_push,false,true
+BC10A922,Decline Crunch,decline_crunch,core_flexion,false,false
+B2398CD1,Decline Crunch (Weighted),decline_crunch_weighted,core_flexion,false,false
+C43825EA,Decline Push Up,push_up_decline,horizontal_push,false,true
+d6c7fe3a-7a84-44d1-8560-38e5ac01fa87,Decline Row,decline_row_machine,horizontal_pull,false,true
+6575F52D,Diamond Push Up,push_up_diamond,horizontal_push,false,true
+F1E57334,Dumbbell Row,dumbbell_row,horizontal_pull,true,true
+BF6ECE89,Dumbbell Step Up,step_up_dumbbell,lunge,true,true
+01A35BF9,EZ Bar Biceps Curl,bicep_curl_ez_bar,elbow_flexion,false,false
+BE640BA0,Face Pull,face_pull,rear_delt,false,false
+867AC3B6,Feet Up Bench Press (Barbell),feet_up_bench_press_barbell,horizontal_push,false,true
+2FA77B28,Flutter Kicks,flutter_kicks,core_hip_flexion,false,false
+8293E554,Front Raise (Dumbbell),front_raise_dumbbell,shoulder_flexion,false,false
+68B83EE0,Glute Ham Raise,glute_ham_raise,hamstring_isolation,false,true
+CBA02382,Glute Kickback (Machine),glute_kickback,hip_extension,true,false
+3D0C7C75,Goblet Squat,goblet_squat,squat,false,true
+4180C405,Good Morning (Barbell),good_morning,hinge,false,true
+1E42FD5F,Hack Squat (Machine),hack_squat,squat,false,true
+36E8F14E,Hammer Curl (Cable),hammer_curl_cable,elbow_flexion,false,false
+7E3BC8B6,Hammer Curl (Dumbbell),hammer_curl_dumbbell,elbow_flexion,false,false
+08590920,Hanging Knee Raise,hanging_knee_raise,core_hip_flexion,false,false
+F8356514,Hanging Leg Raise,hanging_leg_raise,core_hip_flexion,false,false
+F4B4C6EE,Hip Abduction (Machine),hip_abduction,hip_abduction,false,false
+D57C2EC7,Hip Thrust (Barbell),hip_thrust_barbell,hip_extension,false,true
+68CE0B9B,Hip Thrust (Machine),hip_thrust_machine,hip_extension,false,true
+50DFDFAB,Incline Bench Press (Barbell),incline_bench_press_barbell,incline_push,false,true
+07B38369,Incline Bench Press (Dumbbell),incline_bench_press_dumbbell,incline_push,false,true
+3A6FA3D1,Incline Bench Press (Smith Machine),incline_bench_press_smith,incline_push,false,true
+D3E2AB55,Incline Chest Fly (Dumbbell),incline_chest_fly_dumbbell,chest_isolation,false,false
+f893d510-59e3-42c9-9148-dd82aa3e4fb8,Incline Chest Fly Machine,incline_chest_fly_machine,chest_isolation,false,false
+FBF92739,Incline Chest Press (Machine),incline_chest_press_machine,incline_push,false,true
+ce40e88a-83a3-45a3-8df8-4139a631509f,Incline Supported Row Machine,incline_supported_row_machine,horizontal_pull,false,true
+b4c8509c-5644-4da4-a387-8d06d1df30ac,Incline Tricep Pushdown,incline_triceps_pushdown,elbow_extension,false,false
+24706DCD,Iso-Lateral Chest Press (Machine),iso_lateral_chest_press,horizontal_push,false,true
+BC3492DA,Iso-Lateral High Row (Machine),iso_lateral_high_row,vertical_pull,false,true
+91FAFBA3,Iso-Lateral Low Row,iso_lateral_low_row,horizontal_pull,false,true
+AA1EB7D8,Iso-Lateral Row (Machine),iso_lateral_row,horizontal_pull,false,true
+98237BA2,Knee Raise Parallel Bars,knee_raise_parallel_bars,core_hip_flexion,false,false
+6A6C31A5,Lat Pulldown (Cable),lat_pulldown_cable,vertical_pull,false,true
+473CF5B8,Lat Pulldown (Machine),lat_pulldown_machine,vertical_pull,false,true
+4E5257DE,Lat Pulldown - Close Grip (Cable),lat_pulldown_close_grip,vertical_pull,false,true
+BE289E45,Lateral Raise (Cable),lateral_raise_cable,shoulder_abduction,false,false
+422B08F1,Lateral Raise (Dumbbell),lateral_raise_dumbbell,shoulder_abduction,false,false
+D5D0354D,Lateral Raise (Machine),lateral_raise_machine,shoulder_abduction,false,false
+75A4F6C4,Leg Extension (Machine),leg_extension,quad_isolation,false,false
+C7973E0E,Leg Press (Machine),leg_press,squat,false,true
+0EB695C9,Leg Press Horizontal (Machine),leg_press_horizontal,squat,false,true
+0482DA98,Leg Raise Parallel Bars,leg_raise_parallel_bars,core_hip_flexion,false,false
+293483AD,Low Cable Fly Crossovers,cable_fly_low,chest_isolation,false,false
+5E1A7777,Lunge,lunge_bodyweight,lunge,true,true
+B537D09F,Lunge (Dumbbell),lunge_dumbbell,lunge,true,true
+B8127AD1,Lying Leg Curl (Machine),leg_curl_lying,hamstring_isolation,false,false
+09C9F635,Lying Leg Raise,lying_leg_raise,core_hip_flexion,false,false
+DBE341AA,Oblique Crunch,oblique_crunch,core_flexion,false,false
+c1b6a0c4-f5bd-404c-8453-feb2be48b8bc,Overhead Extension,overhead_triceps_extension_machine,elbow_extension,false,false
+7B8D84E8,Overhead Press (Barbell),overhead_press_barbell,vertical_push,false,true
+6AC96645,Overhead Press (Dumbbell),overhead_press_dumbbell,vertical_push,false,true
+B5EFBF9C,Overhead Triceps Extension (Cable),overhead_triceps_extension_cable,elbow_extension,false,false
+018ADC12,Pendlay Row (Barbell),pendlay_row,horizontal_pull,false,true
+30E293E3,Pendulum Squat (Machine),pendulum_squat,squat,false,true
+C6C9B8A0,Plank,plank,core_antiextension,false,false
+1E9A6B8E,Preacher Curl (Machine),preacher_curl_machine,elbow_flexion,false,false
+1B2B1E7C,Pull Up,pull_up,vertical_pull,false,true
+2C37EC5E,Pull Up (Assisted),pull_up_assisted,vertical_pull,false,true
+B123DD01,Pullover (Machine),pullover_machine,lat_isolation,false,false
+392887AA,Push Up,push_up,horizontal_push,false,true
+947DAC23,Push Up - Close Grip,push_up_close_grip,horizontal_push,false,true
+C315DC2A,Rear Delt Reverse Fly (Cable),rear_delt_fly_cable,rear_delt,false,false
+E5988A0A,Rear Delt Reverse Fly (Dumbbell),rear_delt_fly_dumbbell,rear_delt,false,false
+D8281C62,Rear Delt Reverse Fly (Machine),rear_delt_fly_machine,rear_delt,false,false
+046E25A2,Reverse Grip Lat Pulldown (Cable),lat_pulldown_reverse_grip,vertical_pull,false,true
+7C0028C3,Reverse Hyperextension,reverse_hyperextension,hip_extension,false,false
+51A0EDAA,Ring Dips,ring_dip,horizontal_push,false,true
+2B4B7310,Romanian Deadlift (Barbell),romanian_deadlift_barbell,hinge,false,true
+72CFFAD5,Romanian Deadlift (Dumbbell),romanian_deadlift_dumbbell,hinge,false,true
+234897AB,Rope Cable Curl,bicep_curl_cable_rope,elbow_flexion,false,false
+9273BA17,Rope Straight Arm Pulldown,straight_arm_pulldown_rope,lat_isolation,false,false
+AC1BB830,Running,running,cardio,false,false
+F1D60854,Seated Cable Row - Bar Grip,seated_cable_row_bar_grip,horizontal_pull,false,true
+C3BCABB3,Seated Cable Row - Bar Wide Grip,seated_cable_row_wide_grip,horizontal_pull,false,true
+0393F233,Seated Cable Row - V Grip (Cable),seated_cable_row,horizontal_pull,false,true
+062AB91A,Seated Calf Raise,calf_raise_seated,calf_raise,false,false
+5122E7D9,Seated Dip Machine,dip_machine,horizontal_push,false,true
+8BAB2735,Seated Incline Curl (Dumbbell),incline_curl_dumbbell,elbow_flexion,false,false
+11A123F3,Seated Leg Curl (Machine),leg_curl_seated,hamstring_isolation,false,false
+91AF29E0,Seated Overhead Press (Barbell),overhead_press_barbell,vertical_push,false,true
+9930DF71,Seated Overhead Press (Dumbbell),overhead_press_dumbbell_seated,vertical_push,false,true
+1DF4A847,Seated Row (Machine),seated_row_machine,horizontal_pull,false,true
+9237BAD1,Seated Shoulder Press (Machine),shoulder_press_machine,vertical_push,false,true
+234BC743,Seated Triceps Press,seated_triceps_press_machine,elbow_extension,false,false
+878CD1D0,Shoulder Press (Dumbbell),shoulder_press_dumbbell,vertical_push,false,true
+059E835D,Shoulder Press (Machine Plates),shoulder_press_machine_plate_loaded,vertical_push,false,true
+FFABC123,Shrug (Cable),shrug_cable,shrug,false,false
+ABEC557F,Shrug (Dumbbell),shrug_dumbbell,shrug,false,false
+742E5BD5,Shrug (Smith Machine),shrug_smith,shrug,false,false
+E3EDA509,Side Plank,side_plank,core_antiextension,true,false
+8372BBCC,Single Arm Cable Crossover,cable_fly_single_arm,chest_isolation,true,false
+B33B526E,Single Arm Curl (Cable),bicep_curl_cable_single_arm,elbow_flexion,true,false
+2EE45F81,Single Arm Lat Pulldown,lat_pulldown_single_arm,vertical_pull,true,true
+DE68C825,Single Arm Lateral Raise (Cable),lateral_raise_cable_single_arm,shoulder_abduction,true,false
+8347DFD1,Single Arm Tricep Extension (Dumbbell),triceps_extension_dumbbell_single_arm,elbow_extension,true,false
+629AE73D,Single Leg Extensions,leg_extension_single_leg,quad_isolation,true,false
+3FD83744,Single Leg Press (Machine),leg_press_single_leg,squat,true,true
+5DA40761,Single Leg Standing Calf Raise (Dumbbell),calf_raise_single_leg_dumbbell,calf_raise,true,false
+875F585F,Skullcrusher (Barbell),skullcrusher_barbell,elbow_extension,false,false
+68F8A292,Skullcrusher (Dumbbell),skullcrusher_dumbbell,elbow_extension,false,false
+D04AC939,Squat (Barbell),back_squat,squat,false,true
+CC35A01F,Squat (Machine),squat_machine,squat,false,true
+4377A52C,Stair Machine (Steps),stair_machine,cardio,false,false
+06745E58,Standing Calf Raise,calf_raise_bodyweight,calf_raise,false,false
+E53CCBE5,Standing Calf Raise (Barbell),calf_raise_standing_barbell,calf_raise,false,false
+E05C2C38,Standing Calf Raise (Machine),calf_raise_standing_machine,calf_raise,false,false
+AA52E8D2,Standing Calf Raise (Smith),calf_raise_standing_smith,calf_raise,false,false
+133990d3-9415-434f-a0a9-302c301bfa43,Standing Lateral Raise Machine,lateral_raise_machine_standing,shoulder_abduction,false,false
+6120CAAB,Standing Leg Curls,leg_curl_standing,hamstring_isolation,true,false
+31bbd564-2d33-46e9-9dc9-3dbf810f259a,Standing Overhead Press,standing_overhead_press_machine,vertical_push,false,true
+D2387AB1,Straight Arm Lat Pulldown (Cable),straight_arm_pulldown,lat_isolation,false,false
+2A48E443,Straight Leg Deadlift,straight_leg_deadlift,hinge,false,true
+527DA061,Stretching,stretching,mobility,false,false
+08A2974E,T Bar Row,t_bar_row,horizontal_pull,false,true
+243710DE,Treadmill,treadmill,cardio,false,false
+28BB4A95,Triceps Dip,dip,horizontal_push,false,true
+2F8D3067,Triceps Extension (Barbell),skullcrusher_barbell,elbow_extension,false,false
+21310F5F,Triceps Extension (Cable),triceps_extension_cable,elbow_extension,false,false
+3765684D,Triceps Extension (Dumbbell),triceps_extension_dumbbell,elbow_extension,false,false
+3092FADD,Triceps Extension (Machine),triceps_extension_machine,elbow_extension,false,false
+EC3B69A3,Triceps Kickback (Cable),triceps_kickback_cable,elbow_extension,true,false
+CDC472B1,Triceps Pressdown,triceps_pressdown,elbow_extension,false,false
+93A552C6,Triceps Pushdown,triceps_pushdown,elbow_extension,false,false
+94B7239B,Triceps Rope Pushdown,triceps_pushdown_rope,elbow_extension,false,false
+286C1D0B,Upright Row (Cable),upright_row_cable,vertical_pull,false,true
+797F0782,Upright Row (Dumbbell),upright_row_dumbbell,vertical_pull,false,true
+32HKJ34K,Walking Lunge,walking_lunge_bodyweight,lunge,true,true
+A733CC5B,Walking Lunge (Dumbbell),walking_lunge_dumbbell,lunge,true,true
+7C50F118,Wide Pull Up,pull_up_wide,vertical_pull,false,true

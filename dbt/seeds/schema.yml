@@ -21,3 +21,99 @@ seeds:
       column_types:
         start_date: date
         end_date: date
+
+  - name: exercise_crosswalk
+    description: >
+      Maps every exercise_template_id in the log onto a canonical movement. The same
+      movement fragments across templates - a stock template, a custom one, a renamed
+      one - and progression and days_since_last_exposure both break silently across
+      the split. Hand-maintained on purpose: this is judgment, it changes rarely, and
+      it belongs where the change is reviewable.
+
+      Collapse policy: the template IS the machine. Two templates logged in overlapping
+      periods are two real pieces of equipment - or two attachments on the same stack,
+      which load differently enough to matter - so they stay separate. Load scale has to
+      stay comparable within a canonical_exercise, because relative_performance normalises
+      against that exercise's own trailing max; merging two machines would make the series
+      jump on equipment choice rather than on performance.
+
+      So a merge means a rename: one template stops being used and another starts. Only
+      three of the 172 qualify. That makes canonical_exercise close to an identity map
+      today, which is the honest answer - the fragmentation §3.3 anticipated mostly is not
+      there. The value in this seed is movement_pattern, which is what actually carries the
+      HIT-era analysis, plus a tested place for future renames to be recorded.
+    columns:
+      - name: exercise_template_id
+        description: Joins to stg_hevy__exercise_templates. Stable across renames.
+        tests: [unique, not_null]
+      - name: source_title
+        description: >
+          Carried purely so the CSV is readable when edited by hand. Never join on it -
+          it is a snapshot of the title at the time the row was written.
+      - name: canonical_exercise
+        description: The analysis grain for progression and days_since_last_exposure.
+        tests: [not_null]
+      - name: movement_pattern
+        description: >
+          Coarser grouping, and the one that actually carries the HIT-era analysis -
+          only 8 canonical exercises reach 10 sessions since 2026-05-01, but 18
+          movement patterns do.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - horizontal_push
+                  - incline_push
+                  - vertical_push
+                  - horizontal_pull
+                  - vertical_pull
+                  - lat_isolation
+                  - chest_isolation
+                  - shoulder_abduction
+                  - shoulder_flexion
+                  - rear_delt
+                  - shrug
+                  - elbow_flexion
+                  - elbow_extension
+                  - squat
+                  - lunge
+                  - hinge
+                  - quad_isolation
+                  - hamstring_isolation
+                  - hip_extension
+                  - hip_abduction
+                  - calf_raise
+                  - core_flexion
+                  - core_antiextension
+                  - core_hip_flexion
+                  - grip_hang
+                  - cardio
+                  - mobility
+      - name: is_unilateral
+        description: >
+          One limb at a time. Interpretation only - do NOT apply a correction factor.
+
+          The logging convention here is that weight is the total load moved, not the load
+          per implement: a 60 lb dumbbell row is entered as 120, and two 85 lb dumbbells
+          are entered as 170. Reps, meanwhile, are per limb - 10 logged on a unilateral
+          movement means 10 with each side. So weight x reps is already total work across
+          both limbs, and e1RM comes out as exactly 2x the per-limb e1RM, a constant that
+          cancels when relative_performance divides by that same exercise's trailing max.
+          Halving the volume or doubling the reps would double-count.
+
+          Confirmed against the log: unilateral medians sit at or above their bilateral
+          counterparts (single-leg press 320 lb vs leg press 270; single-arm pulldown 160
+          vs 150), which is only possible if the entered number is doubled. No step change
+          across the two-year history, so the convention has been applied consistently.
+
+          The one place it still bites: reps_at_load means per-limb reps on a unilateral
+          movement and total reps on a bilateral one. Fine within an exercise, which is the
+          only way §3.1 uses it - never compare the raw number across exercises.
+        tests: [not_null]
+      - name: is_compound
+        tests: [not_null]
+    config:
+      column_types:
+        is_unilateral: boolean
+        is_compound: boolean

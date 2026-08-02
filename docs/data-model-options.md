@@ -294,8 +294,8 @@ exercise_template_id, canonical_exercise, movement_pattern, is_unilateral, is_co
 This is the highest-leverage thing to build early, because both headline questions key off
 `canonical_exercise`. `movement_pattern` (horizontal push, vertical pull, hinge, squat…) gives
 you a coarser grouping when a single exercise doesn't have enough sessions to say anything.
-`is_unilateral` matters because a set of single-arm rows is half the work of a bilateral set —
-pick a convention and apply it consistently.
+`is_unilateral` is an interpretation flag, not a correction factor — see the answered question
+in [§7](#7-open-questions).
 
 Seeds are the right home: this is judgment, it changes rarely, and it belongs in version control
 where you can see it change.
@@ -484,11 +484,33 @@ rest or training time for one lift rather than waiting for your log to happen to
   if HIT sets regularly run past 12 reps.
 - Rolling baseline window and statistic (90-day trailing max, or something more robust). With
   only ~36 HIT-era workouts, a 90-day trailing window may cover most of the cohort.
-- Unilateral convention: double the reps, or halve the volume?
+- ~~Unilateral convention: double the reps, or halve the volume?~~ **Neither — do nothing.**
+  Weight is logged as the *total load moved*, not load per implement: a 60 lb dumbbell row is
+  entered as 120, two 85 lb dumbbells as 170. Reps are per limb. So `weight × reps` is already
+  total work across both sides, and e1RM comes out as exactly 2× the per-limb e1RM — a constant
+  that cancels the moment `relative_performance` divides by that exercise's own trailing max.
+  Halving the volume or doubling the reps would double-count.
+
+  Confirmed against the log: unilateral medians sit at or above their bilateral counterparts
+  (single-leg press 320 lb vs leg press 270 lb; single-arm pulldown 160 vs 150; single-arm cable
+  curl 80 vs 60), which is only possible if the entered value is doubled. No step change across
+  the two-year history, so the convention has held throughout.
+
+  Residual caveat: `reps_at_load` means per-limb reps on a unilateral movement and total reps on
+  a bilateral one. That is fine within an exercise — the only way §3.1 uses it — but the raw
+  number is not comparable across exercises.
 - Nominal value for `assumed_bodyweight_kg`.
-- 171 distinct exercises across 381 workouts is a lot of variety. How aggressively should the
-  crosswalk collapse them into canonical movements? This directly sets your per-exercise sample
-  sizes.
+- ~~171 distinct exercises across 381 workouts is a lot of variety. How aggressively should the
+  crosswalk collapse them into canonical movements?~~ **Barely at all — the template is the
+  machine.** Two templates logged in overlapping periods are two real machines or two attachments,
+  so they stay separate; a merge means a rename, where one template stops as another starts. Only
+  3 of 172 qualify, leaving `canonical_exercise` close to an identity map.
+
+  Which means the premise of [§3.3](#33-exercise-identity--a-seed-not-code) mostly does not hold
+  for this log — the fragmentation it anticipated is not there. Coverage is identical before and
+  after collapsing: 8 canonical exercises reach 10 HIT-era sessions either way. The crosswalk's
+  value is `movement_pattern`, where 18 of 27 patterns clear that bar, plus a tested home for
+  renames when they do occur.
 
 Answered by probing the live API — see [§1.1](#11-corrections-from-the-live-api): page-size
 ceilings, rate limits, and the lbs conversion.

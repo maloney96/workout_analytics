@@ -24,6 +24,11 @@ models:
     staging:
       +materialized: view
       +schema: staging
+    marts:
+      # Small enough to materialise, and worth it: these are what gets queried
+      # interactively and joined to from every fact.
+      +materialized: table
+      +schema: marts
 
 seeds:
   workout_analytics:
