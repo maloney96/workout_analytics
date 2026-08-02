@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: dim_exercise
+    description: >
+      Exercise dimension at template grain - the API's definition of a movement joined
+      to the hand-maintained judgment in exercise_crosswalk. Restricted to templates
+      that appear in the log; see the model for why the join is inner.
+
+      Two grains live here on purpose. exercise_template_id is what facts join on.
+      canonical_exercise is what progression and days_since_last_exposure key off, and
+      movement_pattern is the grouping that actually carries the HIT-era analysis, where
+      only 8 canonical exercises reach 10 sessions but 18 movement patterns do.
+    columns:
+      - name: exercise_template_id
+        description: Primary key. Stable across renames in the app.
+        tests: [unique, not_null]
+      - name: exercise_title
+        description: Current title from the API - this is the one that tracks renames.
+        tests: [not_null]
+      - name: canonical_exercise
+        description: >
+          Near-identity with the template today. Two templates only collapse when one
+          stopped being used as another started, i.e. a genuine rename.
+        tests: [not_null]
+      - name: movement_pattern
+        tests: [not_null]
+      - name: is_unilateral
+        description: >
+          Interpretation only - never a correction factor. Weight is logged as total load
+          moved and reps are per limb, so weight x reps is already total work. See the
+          exercise_crosswalk seed docs.
+        tests: [not_null]
+      - name: is_compound
+        tests: [not_null]
+      - name: primary_muscle_group
+        description: >
+          Single-valued on purpose. secondary_muscle_groups is an array, so exercise to
+          muscle is many-to-many and joining it naively triple-counts a bench press set;
+          the weighted bridge that would fix it is deferred per §3.8.
+        tests: [not_null]
+      - name: weight_semantics
+        description: What the weight column means. Not comparable across values.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['external_load', 'none', 'added_to_bodyweight', 'assistance_not_convertible']
+      - name: supports_load_metrics
+        description: >
+          False for reps-only, duration, distance and assisted movements - exclude these
+          from any load series. Derived from exercise_type rather than weight_semantics,
+          because external_load is staging's else branch and quietly includes planks,
+          treadmill and dead hangs. 135 of the 172 qualify.
+        tests: [not_null]
+      - name: has_estimated_load
+        description: True where load depends on the nominal assumed_bodyweight_kg var.
+        tests: [not_null]

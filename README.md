@@ -27,8 +27,9 @@ constant across observations. Body composition tracking is out of scope.
 ## Status
 
 Bronze and staging are built and tested. 384 workouts / 9,570 sets spanning 2024-07 to 2026-07,
-refreshed incrementally off the API change feed. Next: the exercise crosswalk seed, then
-`fct_set` / `fct_workout`, then per-exercise progression.
+refreshed incrementally off the API change feed. The exercise crosswalk seed maps all 172 logged
+templates onto 169 canonical movements and 27 movement patterns, and `marts.dim_exercise` joins
+that to the API's definitions. Next: `fct_set` / `fct_workout`, then per-exercise progression.
 
 **Start here: [docs/data-model-options.md](docs/data-model-options.md)** — the source schema,
 three candidate modeling approaches with a recommendation, the decisions that have to be made
@@ -119,8 +120,10 @@ as one JSON document per row — accurate, but unreadable in a table view. Read 
 | `staging.stg_hevy__workout_sets` | atomic — one row per set, with `weight_lb`, `reps`, `rpe`, `is_working_set` |
 | `staging.stg_hevy__exercise_templates` | exercise definitions, muscle group, `weight_semantics` |
 | `staging.training_era` | seeded methodology date ranges |
+| `marts.dim_exercise` | one row per logged exercise — `canonical_exercise`, `movement_pattern`, `supports_load_metrics` |
 
-Start with `select * from staging.stg_hevy__workout_sets`.
+Start with `select * from staging.stg_hevy__workout_sets`, and join `marts.dim_exercise` on
+`exercise_template_id` to group by movement.
 
 **DuckDB allows only one process to hold the database file — and a read-only connection still
 blocks the writer.** So an editor connected to `warehouse.duckdb` will make `make ingest` and
@@ -148,7 +151,7 @@ Three layers, because they catch different failures:
 | Layer | Command | Catches |
 |---|---|---|
 | Unit tests (23) | `make test` | dedupe, change detection, read-only enforcement |
-| dbt tests (46) | `make dbt-test` | uniqueness, referential integrity, set-count parity with bronze |
+| dbt tests (60) | `make dbt-test` | uniqueness, referential integrity, set-count parity with bronze, crosswalk coverage |
 | API cross-check (12) | `make verify` | conversions that are wrong *consistently* |
 
 The third matters most. dbt can only prove staging agrees with bronze — if a timezone
@@ -179,8 +182,9 @@ ingest/             Hevy API client, pagination, CDC via /workouts/events
   config.py         single config resolution for local and CI
 dbt/                dbt project: staging → intermediate → marts
   models/staging/   unnests bronze JSON to workout / exercise / set grain
+  models/marts/     dim_exercise; facts to come
   macros/hevy.sql   local time, pounds canonicalisation, bronze dedupe
-  seeds/            training_era; exercise crosswalk to come
+  seeds/            training_era; exercise_crosswalk (template -> canonical movement)
   tests/            singular tests, incl. set-count parity against bronze
 scripts/            check_connection.py, sync_secrets.sh
 docs/               design notes
