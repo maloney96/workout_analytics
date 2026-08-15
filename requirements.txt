@@ -7,3 +7,6 @@ dbt-core>=1.8
 dbt-duckdb>=1.8
 requests>=2.32
 tenacity>=9.0
+streamlit>=1.35
+plotly>=5.22
+statsmodels>=0.14.0

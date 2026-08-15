@@ -56,3 +56,9 @@ models:
       - name: has_estimated_load
         description: True where load depends on the nominal assumed_bodyweight_kg var.
         tests: [not_null]
+
+  - name: obt_sets
+    description: Wide denormalized serving table for BI tools. Joins all atomic sets to their workout and session attributes.
+    columns:
+      - name: set_key
+        tests: [unique, not_null]
