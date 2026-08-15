@@ -32,6 +32,8 @@ models:
                 values: ['volume', 'transition', 'hit']
       - name: duration_min
         description: Non-negative; see tests/assert_workout_duration_sane.sql.
+      - name: is_deleted
+        description: True if the workout was deleted in the app.
 
   - name: stg_hevy__workout_exercises
     description: One row per exercise within a workout.

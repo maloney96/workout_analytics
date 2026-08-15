@@ -14,6 +14,18 @@ with latest as (
     {{ latest_by_record_id('hevy_bronze', 'workouts') }}
 ),
 
+latest_events as (
+    {{ latest_by_record_id('hevy_bronze', 'workout_events') }}
+),
+
+deleted_events as (
+    select
+        record_id as workout_id,
+        cast(record ->> 'deleted_at' as timestamptz) as deleted_at
+    from latest_events
+    where record ->> 'type' = 'deleted'
+),
+
 renamed as (
     select
         cast(record ->> 'id' as varchar)         as workout_id,
@@ -66,9 +78,12 @@ select
     d.duration_min,
     d.exercise_count,
     e.era as training_era,
+    del.deleted_at is not null as is_deleted,
     d.created_at,
     d.updated_at,
     d.ingested_at
 from derived d
 left join {{ ref('training_era') }} e
     on d.workout_date_local between e.start_date and e.end_date
+left join deleted_events del
+    on d.workout_id = del.workout_id
