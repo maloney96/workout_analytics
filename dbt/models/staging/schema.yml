@@ -1,121 +1,185 @@
 version: 2
-
 models:
-  - name: stg_hevy__workouts
-    description: One row per workout, with local-time derivations and training era.
-    columns:
-      - name: workout_id
-        tests: [unique, not_null]
-      - name: started_at_utc
-        tests: [not_null]
-      - name: workout_date_local
-        tests: [not_null]
-      - name: workout_hour_local
-        description: 0-23 in local time. The grouping key for the time-of-day question.
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
-                quote: false
-      - name: part_of_day
-        tests:
-          - accepted_values:
-              arguments:
-                values: ['night', 'morning', 'midday', 'afternoon', 'evening']
-      - name: training_era
-        description: Null would mean a workout fell outside every seeded era range.
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: ['volume', 'transition', 'hit']
-      - name: duration_min
-        description: Non-negative; see tests/assert_workout_duration_sane.sql.
-      - name: is_deleted
-        description: True if the workout was deleted in the app.
+- name: stg_hevy__workouts
+  description: One row per workout, with local-time derivations and training era.
+  columns:
+  - name: workout_id
+    tests:
+    - unique
+    - not_null
+    description: workout_id description.
+  - name: started_at_utc
+    tests:
+    - not_null
+    description: started_at_utc description.
+  - name: workout_date_local
+    tests:
+    - not_null
+    description: workout_date_local description.
+  - name: workout_hour_local
+    description: 0-23 in local time. The grouping key for the time-of-day question.
+    tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          - 13
+          - 14
+          - 15
+          - 16
+          - 17
+          - 18
+          - 19
+          - 20
+          - 21
+          - 22
+          - 23
+          quote: false
+  - name: part_of_day
+    tests:
+    - accepted_values:
+        arguments:
+          values:
+          - night
+          - morning
+          - midday
+          - afternoon
+          - evening
+    description: part_of_day description.
+  - name: training_era
+    description: Null would mean a workout fell outside every seeded era range.
+    tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values:
+          - volume
+          - transition
+          - hit
+  - name: duration_min
+    description: Non-negative; see tests/assert_workout_duration_sane.sql.
+  - name: is_deleted
+    description: True if the workout was deleted in the app.
+- name: stg_hevy__workout_exercises
+  description: One row per exercise within a workout.
+  columns:
+  - name: workout_id
+    tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('stg_hevy__workouts')
+          field: workout_id
+    description: workout_id description.
+  - name: exercise_index
+    tests:
+    - not_null
+    description: exercise_index description.
+  - name: exercise_title
+    tests:
+    - not_null
+    description: exercise_title description.
+- name: stg_hevy__workout_sets
+  description: The atomic grain - one row per logged set.
+  columns:
+  - name: set_key
+    description: Positional, so unique within a load but not stable across edits.
+    tests:
+    - unique
+    - not_null
+  - name: workout_id
+    tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('stg_hevy__workouts')
+          field: workout_id
+    description: workout_id description.
+  - name: set_type
+    tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values:
+          - normal
+          - warmup
+          - dropset
+          - failure
+    description: set_type description.
+  - name: is_working_set
+    tests:
+    - not_null
+    description: is_working_set description.
+  - name: reps
+    description: Null for duration- or distance-based movements.
+- name: stg_hevy__exercise_templates
+  columns:
+  - name: exercise_template_id
+    tests:
+    - unique
+    - not_null
+    description: exercise_template_id description.
+  - name: exercise_title
+    tests:
+    - not_null
+    description: exercise_title description.
+  - name: exercise_type
+    description: 'Observed values, not the published enum. The spec lists bodyweight_reps
+      and bodyweight_assisted_reps, which the API never returns, and omits bodyweight_weighted,
+      bodyweight_assisted, floors_duration and steps_duration. This test failing again
+      means Hevy added a type worth handling.
 
-  - name: stg_hevy__workout_exercises
-    description: One row per exercise within a workout.
-    columns:
-      - name: workout_id
-        tests:
-          - not_null
-          - relationships:
-              arguments:
-                to: ref('stg_hevy__workouts')
-                field: workout_id
-      - name: exercise_index
-        tests: [not_null]
-      - name: exercise_title
-        tests: [not_null]
-
-  - name: stg_hevy__workout_sets
-    description: The atomic grain - one row per logged set.
-    columns:
-      - name: set_key
-        description: Positional, so unique within a load but not stable across edits.
-        tests: [unique, not_null]
-      - name: workout_id
-        tests:
-          - not_null
-          - relationships:
-              arguments:
-                to: ref('stg_hevy__workouts')
-                field: workout_id
-      - name: set_type
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: ['normal', 'warmup', 'dropset', 'failure']
-      - name: is_working_set
-        tests: [not_null]
-      - name: reps
-        description: Null for duration- or distance-based movements.
-
-  - name: stg_hevy__exercise_templates
-    columns:
-      - name: exercise_template_id
-        tests: [unique, not_null]
-      - name: exercise_title
-        tests: [not_null]
-      - name: exercise_type
-        description: >
-          Observed values, not the published enum. The spec lists bodyweight_reps and
-          bodyweight_assisted_reps, which the API never returns, and omits
-          bodyweight_weighted, bodyweight_assisted, floors_duration and steps_duration.
-          This test failing again means Hevy added a type worth handling.
-        tests:
-          - accepted_values:
-              arguments:
-                values:
-                  - weight_reps
-                  - reps_only
-                  - duration
-                  - distance_duration
-                  - bodyweight_weighted
-                  - bodyweight_assisted
-                  - short_distance_weight
-                  - floors_duration
-                  - steps_duration
-      - name: weight_semantics
-        description: What weight_lb means for this type; not comparable across values.
-        tests:
-          - accepted_values:
-              arguments:
-                values:
-                  - none
-                  - added_to_bodyweight
-                  - assistance_not_convertible
-                  - external_load
-
-  - name: stg_hevy__routines
-    columns:
-      - name: routine_id
-        tests: [unique, not_null]
-
-  - name: stg_hevy__routine_folders
-    columns:
-      - name: folder_id
-        tests: [unique, not_null]
+      '
+    tests:
+    - accepted_values:
+        arguments:
+          values:
+          - weight_reps
+          - reps_only
+          - duration
+          - distance_duration
+          - bodyweight_weighted
+          - bodyweight_assisted
+          - short_distance_weight
+          - floors_duration
+          - steps_duration
+  - name: weight_semantics
+    description: What weight_lb means for this type; not comparable across values.
+    tests:
+    - accepted_values:
+        arguments:
+          values:
+          - none
+          - added_to_bodyweight
+          - assistance_not_convertible
+          - external_load
+  description: The stg_hevy__exercise_templates model.
+- name: stg_hevy__routines
+  columns:
+  - name: routine_id
+    tests:
+    - unique
+    - not_null
+    description: routine_id description.
+  description: The stg_hevy__routines model.
+- name: stg_hevy__routine_folders
+  columns:
+  - name: folder_id
+    tests:
+    - unique
+    - not_null
+    description: folder_id description.
+  description: The stg_hevy__routine_folders model.

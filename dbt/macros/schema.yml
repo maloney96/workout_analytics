@@ -1,0 +1,60 @@
+version: 2
+
+macros:
+  - name: calculate_e1rm
+    description: Calculates the estimated 1-rep max using the Brzycki formula. Returns null if reps > 12 to avoid skewed estimates.
+    arguments:
+      - name: weight
+        type: float
+        description: The weight lifted.
+      - name: reps
+        type: integer
+        description: The number of repetitions performed.
+
+  - name: generate_schema_name
+    description: Overrides the default dbt schema naming to use custom schema names (e.g. staging, intermediate, marts) verbatim without prefixing them with the target schema.
+    arguments:
+      - name: custom_schema_name
+        type: string
+        description: The custom schema name defined in dbt_project.yml.
+      - name: node
+        type: dict
+        description: The dbt node object.
+
+  - name: to_local
+    description: Casts a UTC timestamp string to a timezone-aware local timestamp using the `local_tz` variable.
+    arguments:
+      - name: utc_expr
+        type: string
+        description: The UTC timestamp expression.
+
+  - name: part_of_day
+    description: Maps a 24-hour hour integer to a descriptive string (e.g., night, morning, midday, afternoon, evening) to reduce sparsity in time-of-day groupings.
+    arguments:
+      - name: hour_expr
+        type: integer
+        description: The hour of the day (0-23).
+
+  - name: weight_lb
+    description: Converts weight from kg to lb and rounds to 2 decimal places. Used to cleanly recover the exact float value the user originally typed in Hevy before it was converted to kg for storage.
+    arguments:
+      - name: kg_expr
+        type: float
+        description: The weight in kilograms.
+
+  - name: weight_kg_canonical
+    description: Rounds kg weight to 3 decimal places to normalize noise in float conversions while preserving real fractional increments.
+    arguments:
+      - name: kg_expr
+        type: numeric
+        description: The weight in kilograms.
+
+  - name: latest_by_record_id
+    description: Deduplicates an append-only bronze source table by returning only the most recently ingested row for each `record_id`.
+    arguments:
+      - name: source_name
+        type: string
+        description: The name of the dbt source.
+      - name: table_name
+        type: string
+        description: The name of the source table.

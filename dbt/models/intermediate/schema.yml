@@ -1,0 +1,7 @@
+version: 2
+
+models:
+  - name: int_exercise_sessions
+    description: Intermediate model aggregating sets to the session grain.
+  - name: int_exercise_rest_intervals
+    description: Intermediate model calculating rest between exercises.
