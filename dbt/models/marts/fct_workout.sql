@@ -11,9 +11,9 @@ sets as (
 session_metrics as (
     select
         workout_id,
-        count(distinct exercise_index) as actual_exercise_count,
+        count(distinct exercise_index) as total_exercises,
         count(*) as total_sets,
-        sum(case when is_working_set then 1 else 0 end) as working_sets
+        sum(case when is_working_set then 1 else 0 end) as total_working_sets
     from sets
     group by 1
 )
@@ -23,16 +23,16 @@ select
     w.title,
     w.routine_id,
     w.workout_date_local,
-    w.workout_hour_local,
+    w.workout_hour_local as hour_local,
     w.part_of_day,
     w.day_of_week,
     w.day_of_week_number,
     w.is_weekend,
-    w.duration_min,
+    w.duration_min as session_duration,
     w.training_era,
-    m.actual_exercise_count,
-    m.total_sets,
-    m.working_sets,
+    coalesce(m.total_exercises, 0) as total_exercises,
+    coalesce(m.total_sets, 0) as total_sets,
+    coalesce(m.total_working_sets, 0) as total_working_sets,
     w.created_at,
     w.updated_at
 from workouts as w
