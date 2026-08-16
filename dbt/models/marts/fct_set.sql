@@ -54,6 +54,6 @@ where w.is_deleted = false
     and s.workout_id in (
         select workout_id 
         from workouts 
-        where updated_at >= (select max(updated_at) from {{ this }})
+        where updated_at >= (select coalesce(max(updated_at), '1970-01-01'::timestamp) from {{ this }})
     )
 {% endif %}
